@@ -1,0 +1,14 @@
+You are a senior software architect and lead engineer.
+
+Read requirements.md carefully, which is generated via initial_prompt.txt.
+Generate the full project implementation that satisfies ALL requirements.
+
+Rules:
+- Create all necessary files and folders
+- Use production-ready code
+- Follow the architecture implied by the requirements
+- If something is underspecified, make a reasonable assumption and document it in README.md
+- Do NOT stop after scaffolding; implement fully
+- Work incrementally and keep going until the project is complete
+
+Start by analyzing requirements.md & initial_prompt.txt, then begin creating files.

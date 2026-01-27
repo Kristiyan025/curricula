@@ -1,0 +1,44 @@
+# Curricula - .gitignore
+
+# Composer
+/vendor/
+composer.lock
+
+# Configuration (contains sensitive data)
+/config/config.php
+
+# Logs
+/logs/*.log
+
+# Storage (uploaded files)
+/storage/*
+!/storage/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Cache
+*.cache
+/cache/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Debug
+/debug/
+*.debug
+
+# Temporary files
+*.tmp
+*.temp
+/tmp/

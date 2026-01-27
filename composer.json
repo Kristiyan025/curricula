@@ -1,0 +1,17 @@
+{
+  "name": "fmi/curricula",
+  "description": "Web application for schedule management of the Bachelor Majors of FMI at Sofia University",
+  "type": "project",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/"
+    }
+  },
+  "require": {
+    "php": ">=8.2"
+  },
+  "scripts": {
+    "start": "php -S localhost:8000 -t public"
+  }
+}

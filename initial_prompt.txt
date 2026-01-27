@@ -1,0 +1,79 @@
+You are software architect with 25 years of experience. Your response should be long & descriptive, with a professional tone. The response should be a Markdown code. Target length of the response should be <=15 pages of Markdown. For diagrams, you should write and give Mermaid code (in MD code blocks), instead of pictures. Include only diagrams that materially help (specified in each requirement type). All Mermaid diagrams must be syntactically valid; all SQL DDL must be consistent and executable in MySQL 8+; any PHP code must be syntactically valid.
+
+You need to design the software requirements for a web app, named Curricula. Write FR, NFR, ect. in ‘The system shall…’ style and include acceptance criteria (Given/When/Then or bullet checks) for each major requirement. The requirments should include:
+- Domain Description (DD) - description of the domain knowledge of the system, like: entities, relationships, collection relative sizes. Also, a glossary of the domain-specific terms should be included;
+- Functional Requirements (FR)
+- Non-Functional Requirements (NFR) - including business requirements and quality attributes, i.e. all important drivers;
+- Tech Stack Requirements (TSR)
+- Database view (DBV) - including description of all tables and their columns, indices, constraints, i.e. everything needed to implement the DB schema from the requirements; it'll be good to include diagrams; DBV must include: table name, purpose, columns (type, nullability), PK/FK, unique constraints, check constraints where applicable, and indices with rationale. Use MySQL 8 only.
+- Use-Case Diagrams (UCD) - explaining how the system can be used by all types of actors;
+- API Requirements (APIR) - explaining all API endpoints (including public & internal);
+- Algorithm Implementation Requirements (AIR) - explaining how each algorithm must be implemented, and provide different alternatives for the implementation and make comparison between them, explaining what are the trade-offs and why you have chosen a specific implementation. This section should be referenced by the Function Requirements section;
+- Classes/Components View (CLV) - description of the classes' relationships;
+- Project Structure View (PSV) - description of how the files/directories should be organised. It should be strongly correlated to the Classes/Components View. It'll be good to include diagrams;
+
+
+Here is the description of the project and what kind of functionality it should support:
+- Curricula is a web app/system for schedule management of the Bachelor Majors of the Faculty of Mathematics & Informatics (FMI) of Sofia University; 
+- The Faculty is teaching 2 semesters each school year: winter semester (01. October - 15. January) & summer semester (16. February - 15. June). After each semester, there is 1 month exam session: winter exam session (16. January - 15. February) & summer exam session (16. June - 15. July). Additionally, there is 1 month resit exam session (15. August - 15. September). The schedule for the lectures and test for each semester should be create 1 month before the semester begins. There is a list of courses, and each semester, some of the courses are taught and have course instances which students can enroll. Each course instance has a weekly schedule (i.e. each week the schedule is the same) for lectures and exercises. A course instance has 1 lecture and 1-2 exercises per week. Each lecture/exercise starts at exact hour and the duration is an integer number of continuous hours. Each course instance has a set number of tests during the semester, and each test has a preset day range when it should be held (like 01. November - 30. November). At the end of the semester during the exam session, each course instance can have up to 3 dates for exams for the course instance. Each lecture, exercise, test, exam has, apart from scheduled time, a scheduled room number in the faculty, which is 3 digit number - the first digit specifies the floor and the rest is the room number. Assume that each floor has at most 30 rooms, and there are 6 floors, so there are at most 180 rooms. Each room has a number of white and a number black boards, and there is at least 1 board in each room.
+- Each student has a major, which year are they in the major's curriculum during the school year, major stream, and group in the stream. The student's are enrolled mandatory and optionally in elective courses. The main difference between mandatory & elective courses is the number of students enrolled - assume that for mandatory courses the number of enrolled students is high (in the order of hundreds), while for elective courses the number of enrolled students is at most 80, although usually is up to 20. I am giving this numbers to highlight that during the creation of the schedule the mandatory courses take priority and the electives are scheduled for whatever is left. The structure of the grouping of the students is hierarchical: Major -> Major Stream -> Group. There are 10-20 majors, each has 1-2 major streams, each of which has 3-6 groups of up to 30 students.
+- the project should be implemented in PHP, using MySQL as DB;
+- all the information displayed on the website should be in Bulgarian, which may require storing some of the information in the DB in Bulgarian, e.g. the course outline;
+- The system (at the very least) should have the following entities:
+	- Primitives: 
+		* here is described the minimal requirement for the primitive's attributes, i.e. this specification is non-limiting for other attributes;
+		- Courses - they have: 
+			- Prerequisite courses, that need to be taken before this course is taken; some prerequisites may be optional (i.e. good to have, but not absolutely necessary);
+			- Course outline, highlighting the main concepts that will be taught in the course;
+			- Whether it is elective or mandatory course. Elective courses' instances may be enrolled by students from all majors, but mandatory courses' instances may be enrolled only by students from a (one) specific major.
+			- Number of credits the course gives the students.
+		- Course Instances - they have:
+			- 1-3 lecturers
+			- 4-6 assistants
+			- number of exercises per week
+			- weekly schedule for lectures/exercises (set during the weekly schedule generation, initially null)
+			- number of tests during the semester
+			- a list of test time range requirements, individual per test.
+			- semester schedule for the tests (set during the test schedule generation, initially null)
+			- number of exam dates
+			- exam session schedule (set during the exam schedule generation, initially null)
+		- Time Span (less than a day):
+			- start time
+			- end time
+		- Weekly schedule for a course instance:
+			- a list of tuples of time span, room, whether is exercise/lecture
+		- Lecturer/Student/Assistant schedule:
+			- a list of tuples of time span, room, subject(i.e. course instance)
+		- Test schedule (per course instance):
+			- a list of tuple of date, time span, room
+		- Test schedule (per major):
+			- a list of tuple of date, time span, room, subject(i.e. course instance)
+		- Exam session schedule (for mandatory course instances per major):
+			- a list of tuple of date, time span, room, subject(i.e. course instance)
+		- Exam session schedule (for elective course instances):
+			- a list of tuple of date, time span, room, subject(i.e. course instance)
+		- User:
+			- faculty number - a text of at most 10 alphanumeric characters (usually is 10, but can be less);
+	- User Roles (each user can have multiple roles): 
+		- Admin(s);
+		- Student(s);
+		- Lecturer(s); 
+		- Assistant(s) - can be both a Student or a Lecturer; it gives additional authority for specific course instances only. I.e. one student can be assistant in 3 course instances, and it should have additional authority only for them;
+- the main functionality of the project is the 3 types of schedule generation: weekly program, test and exam session. 
+	- Weekly program schedule generation (generated per semester) - an assignment of tuples of either course instance (for the lecture of the course instance, which for the whole major stream) or course instance, assistant, major stream group (for the exercise) (this number of tuples must match the number of exercises in the course instance per group) to tuples of day-of-week-time span, room. Additionally, the spans should not be overlapping per group, i.e. all the exercises and lectures that a specific group must visit for all the mandatory courses should be non-overlapping. Also, the spans for the elective course instances should have minimal overlap (possibly zero) with the each other and with the ones for mandatory course instances; here we (try) minimize the number of overlapping hours in the weekly program for each student (summed over the students). For each hour, the assignment of rooms should also be non-overlapping. The schedule for mandatory course instances should be in Monday-Friday and withing hours 08:00 - 18:00. The schedule for assistants shouldn't overlap with their courses, if the assistant is a student. Furthermore, there might be additional soft-constraints for either lecturers or assistants: prefer to have lectures/exercises in the morning, or strictly after lunch, or prefer to teach in a room with at least 1 white board, or no black board. These soft constraints should be tried to be satisfied, but the other constraints are more important. Also, lecturers' soft constraints should have higher priority than the assistants' ones;
+	- Test schedule generation (generated per semester) - an assignment of tuples of course instance (with number of tests > 0), test index (per test, number of tuples must match number of tests of the course instance) to tuples of datetime span, room. Additionally, each test is scheduled within its predefined allowed date range; the assigned time spans must be non-overlapping per room on the same date, and for mandatory course instances the test time spans must be non-overlapping with each other and with all mandatory lectures and exercises that the same major stream group is required to attend, but for each course instance, there might be allowed to take the test during the lecture of the course instance (must be specified in the course instance as Boolean for example, and it applies for all tests), but the date-time span must match the day-of-week-time span from the weekly program schedule for the course instance; while for elective course instances the overlaps with other elective tests and with mandatory tests should be minimized; The spans for all course instances that have a specific lecturer as part of the lecturers for them should be non-overlapping; Tests aren’t bounded by the Mon–Fri 08–18 requirement for the weekly program schedule, but must begin and end in the time range 08:00-22:00;
+	- Exam session schedule generation (generated per exam session) – an assignment of tuples of course instance, exam index (per exam date, the number of tuples for that course instance must match the number of exam dates of the course instance) to tuples of datetime span, room. Additionally, the assigned time spans must be non-overlapping per room on the same date, and for mandatory course instances the exam time spans must be non-overlapping with each other for the same major stream group, while for elective course instances the overlaps with other elective exams and with mandatory exams should be minimized; additionally, the exam schedules for mandatory course instances are generated per major and the exam schedules for elective course instances are generated globally. The spans for all course instances that have a specific lecturer as part of the lecturers for them should be non-overlapping; Exams aren’t bounded by the Mon–Fri 08–18 requirement for the weekly program schedule, but must begin and end in the time range 08:00-22:00;
+        - additional assumptions:
+		- Time granularity: every event must start at an exact hour and continue for a positive integer number of hours.
+		- Duration of tests/exams: fixed (e.g., 2 hours) or per course instance; can be at most 5 hours.
+		- Room capacity: assume infinite.
+	- for each type of schedule generation, 2-3 schedule variants should be proposed (generated) and then an admin must select which schedule will be used (based on majority vote across lecturers/assistants, but this is done outside the system, so it doesn't matter how it is done); For each generator, the system shall persist at most 3 generated variants, allow admin to mark one as ‘selected’, and then delete others;
+	- the schedule generation can be formulated as a Constrain Satisfaction problem (CSP) and therefore might be solved using a CSP algorithm, although, the need to generate more than 1 schedule variants implies the use of randomization somewhere, so a genetic algorithm might also be good idea. You can propose other types of algorithms as well, if you think they would be more fitting. Each schedule generation must take at most 20 minutes;
+- an admin can set the current time in the timeline, i.e. are we in the winter semester, the winter exam session, the summer semester, the summer exam session, or the resit exam session. The system must be able to hold all the information and handle generations, only for the current year (i.e. imagine that the university is working only for 1 year and then it shuts down), i.e. the system stores exactly one academic year worth of information;
+- everyone must be able to view all available schedules in the current point in time, but only admins can generate schedules and select schedule variants, but after the schedule variant selection, the schedule is viewable for everyone;
+- the system must present view for all types of schedules from different points of views: from the major stream POV, from a specific lecturer POV, and all the elective courses list of schedules. The weekly program POV should be viewed as a table for all week days and all hours from 08:00 - 22:00. The other types of schedules should be viewed as a month calendar views;
+- All UI strings, labels, and domain names displayed to users must be Bulgarian; DB may store Bulgarian text where appropriate; API field names may remain English.
+- The system should log (to DB) events and keep them in a table in the DB for easier debugging. Each event has a UTC-timestamp, a main constant massage and optionally passed named parameters for easier search. The format of the table should be: Timestamp (ID) - Event Message - Parameters (JSON Dictionary string);
+- the project is already structured like the following (a basic PHP setup), so try to modify the structure from here:
+	curricula/
+	├─ public/

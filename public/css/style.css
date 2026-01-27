@@ -1,0 +1,242 @@
+:root {
+  --fmi-blue: #003366;
+  --fmi-gold: #c4a000;
+  --fmi-light-blue: #4a90a4;
+}
+
+/* Header & Navigation */
+.navbar-fmi {
+  background: linear-gradient(135deg, var(--fmi-blue) 0%, #004080 100%);
+}
+
+.navbar-fmi .navbar-brand {
+  color: white;
+  font-weight: bold;
+}
+
+.navbar-fmi .nav-link {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.navbar-fmi .nav-link:hover {
+  color: var(--fmi-gold);
+}
+
+/* Buttons */
+.btn-fmi {
+  background-color: var(--fmi-blue);
+  border-color: var(--fmi-blue);
+  color: white;
+}
+
+.btn-fmi:hover {
+  background-color: #004080;
+  border-color: #004080;
+  color: white;
+}
+
+.btn-fmi-gold {
+  background-color: var(--fmi-gold);
+  border-color: var(--fmi-gold);
+  color: #333;
+}
+
+.btn-fmi-gold:hover {
+  background-color: #d4b000;
+  border-color: #d4b000;
+  color: #333;
+}
+
+/* Cards */
+.card-header-fmi {
+  background-color: var(--fmi-blue);
+  color: white;
+}
+
+/* Schedule table */
+.schedule-table {
+  font-size: 0.875rem;
+}
+
+.schedule-table th,
+.schedule-table td {
+  vertical-align: middle;
+  text-align: center;
+}
+
+.schedule-table td {
+  height: 80px;
+  padding: 0.25rem;
+}
+
+/* Schedule slots */
+.schedule-slot,
+.slot-lecture,
+.slot-exercise {
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.8rem;
+}
+
+.slot-lecture {
+  background-color: #cfe2ff;
+  border-left: 3px solid #0d6efd;
+}
+
+.slot-exercise {
+  background-color: #d1e7dd;
+  border-left: 3px solid #198754;
+}
+
+.slot-test {
+  background-color: #fff3cd;
+  border-left: 3px solid #ffc107;
+}
+
+.slot-exam {
+  background-color: #f8d7da;
+  border-left: 3px solid #dc3545;
+}
+
+/* Footer */
+.footer-fmi {
+  background-color: var(--fmi-blue);
+  color: rgba(255, 255, 255, 0.8);
+  padding: 1.5rem 0;
+  margin-top: 2rem;
+}
+
+.footer-fmi a {
+  color: var(--fmi-gold);
+  text-decoration: none;
+}
+
+.footer-fmi a:hover {
+  text-decoration: underline;
+}
+
+/* Hero section */
+.hero-section {
+  background: linear-gradient(
+    135deg,
+    var(--fmi-blue) 0%,
+    var(--fmi-light-blue) 100%
+  );
+  color: white;
+  padding: 3rem 0;
+  margin-bottom: 2rem;
+}
+
+/* Stats cards */
+.stats-card {
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.stats-card:hover {
+  transform: translateY(-2px);
+}
+
+.stats-card .card-body {
+  display: flex;
+  align-items: center;
+}
+
+.stats-card .stats-icon {
+  font-size: 2.5rem;
+  margin-right: 1rem;
+  opacity: 0.8;
+}
+
+.stats-card .stats-value {
+  font-size: 1.75rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.stats-card .stats-label {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Alerts */
+.alert-fmi {
+  background-color: #e8f4f8;
+  border-color: var(--fmi-light-blue);
+  color: var(--fmi-blue);
+}
+
+/* Forms */
+.form-label {
+  font-weight: 500;
+}
+
+/* Tables */
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 51, 102, 0.05);
+}
+
+/* Badges */
+.badge-fmi {
+  background-color: var(--fmi-blue);
+}
+
+/* Loading spinner */
+.spinner-fmi {
+  color: var(--fmi-blue);
+}
+
+/* Calendar view */
+.calendar-day {
+  min-height: 100px;
+  border: 1px solid #dee2e6;
+  padding: 0.5rem;
+}
+
+.calendar-day.today {
+  background-color: #fff3cd;
+}
+
+.calendar-event {
+  font-size: 0.75rem;
+  padding: 0.25rem;
+  margin-bottom: 0.25rem;
+  border-radius: 0.25rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .schedule-table {
+    font-size: 0.75rem;
+  }
+
+  .schedule-table td {
+    height: 60px;
+  }
+
+  .hero-section {
+    padding: 2rem 0;
+  }
+}
+
+/* Print styles */
+@media print {
+  .navbar,
+  .footer-fmi,
+  .btn,
+  .no-print {
+    display: none !important;
+  }
+
+  .schedule-table {
+    border: 1px solid #000;
+  }
+
+  .slot-lecture,
+  .slot-exercise {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
