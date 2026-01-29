@@ -450,24 +450,36 @@ class AdminController extends BaseController
             return;
         }
         
+        $whiteBoards = (int) $this->getPost('white_boards', 0);
+        $blackBoards = (int) $this->getPost('black_boards', 0);
+        
+        if ($whiteBoards === 0 && $blackBoards === 0) {
+            $this->session->setFlash('error', 'Залата трябва да има поне една дъска (бяла или черна)');
+            $this->redirect('/admin/rooms/create');
+            return;
+        }
+        
         $data = [
             'number' => trim($this->getPost('number', '')),
-            'building' => trim($this->getPost('building', '')),
-            'floor' => (int) $this->getPost('floor', 0),
-            'capacity' => (int) $this->getPost('capacity', 30),
-            'room_type' => $this->getPost('room_type', 'LECTURE_HALL'),
-            'has_projector' => (bool) $this->getPost('has_projector', false),
-            'has_computers' => (bool) $this->getPost('has_computers', false),
-            'black_boards' => (int) $this->getPost('black_boards', 0),
-            'white_boards' => (int) $this->getPost('white_boards', 0),
+            'floor' => (int) $this->getPost('floor', 1),
+            'white_boards' => $whiteBoards,
+            'black_boards' => $blackBoards,
         ];
         
         try {
             Room::create($data);
             $this->session->setFlash('success', 'Залата е създадена');
             $this->redirect('/admin/rooms');
+        } catch (\PDOException $e) {
+            // Check for duplicate entry error (MySQL error code 1062)
+            if ($e->getCode() == 23000 || strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                $this->session->setFlash('error', 'Зала с този номер вече съществува');
+            } else {
+                $this->session->setFlash('error', 'Грешка при създаване на залата');
+            }
+            $this->redirect('/admin/rooms/create');
         } catch (\Exception $e) {
-            $this->session->setFlash('error', 'Грешка: ' . $e->getMessage());
+            $this->session->setFlash('error', 'Грешка при създаване на залата');
             $this->redirect('/admin/rooms/create');
         }
     }
@@ -512,15 +524,19 @@ class AdminController extends BaseController
             return;
         }
         
+        $whiteBoards = (int) $this->getPost('white_boards', 0);
+        $blackBoards = (int) $this->getPost('black_boards', 0);
+        
+        if ($whiteBoards === 0 && $blackBoards === 0) {
+            $this->session->setFlash('error', 'Залата трябва да има поне една дъска (бяла или черна)');
+            $this->redirect("/admin/rooms/$id/edit");
+            return;
+        }
+        
         $room->number = trim($this->getPost('number', ''));
-        $room->building = trim($this->getPost('building', ''));
-        $room->floor = (int) $this->getPost('floor', 0);
-        $room->capacity = (int) $this->getPost('capacity', 30);
-        $room->room_type = $this->getPost('room_type', 'LECTURE_HALL');
-        $room->has_projector = (bool) $this->getPost('has_projector', false);
-        $room->has_computers = (bool) $this->getPost('has_computers', false);
-        $room->black_boards = (int) $this->getPost('black_boards', 0);
-        $room->white_boards = (int) $this->getPost('white_boards', 0);
+        $room->floor = (int) $this->getPost('floor', 1);
+        $room->white_boards = $whiteBoards;
+        $room->black_boards = $blackBoards;
         
         if ($room->save()) {
             $this->session->setFlash('success', 'Залата е обновена');
@@ -603,14 +619,17 @@ class AdminController extends BaseController
             return;
         }
         
+        $courseType = $this->getPost('course_type', 'MANDATORY');
+        $isElective = $courseType === 'ELECTIVE';
+        
         $data = [
             'code' => trim($this->getPost('code', '')),
             'name_bg' => trim($this->getPost('name_bg', '')),
-            'name_en' => trim($this->getPost('name_en', '')),
-            'outline_bg' => trim($this->getPost('description', '')),
+            'outline_bg' => trim($this->getPost('outline_bg', '')),
             'major_id' => (int) $this->getPost('major_id', 0) ?: null,
             'credits' => (int) $this->getPost('credits', 5),
-            'is_elective' => (bool) $this->getPost('is_elective', false),
+            'is_elective' => $isElective,
+            'year' => !$isElective && $this->getPost('year', null) ? (int) $this->getPost('year') : null,
         ];
         
         $prerequisites = $this->getPost('prerequisites', []);
@@ -647,11 +666,19 @@ class AdminController extends BaseController
         $allCourses = Course::all();
         $prerequisites = $this->courseService->getPrerequisites($id);
         
+        // Build prerequisite graph for all courses (for cycle detection in JS)
+        $prerequisiteGraph = [];
+        foreach ($allCourses as $c) {
+            $coursePrereqs = $this->courseService->getPrerequisites($c->id);
+            $prerequisiteGraph[$c->id] = array_map(fn($p) => $p['id'], $coursePrereqs);
+        }
+        
         $this->render('admin/courses/edit', [
             'course' => $course,
             'majors' => $majors,
             'allCourses' => $allCourses,
             'prerequisites' => $prerequisites,
+            'prerequisiteGraph' => $prerequisiteGraph,
             'title' => 'Редактиране на курс'
         ]);
     }
@@ -669,13 +696,16 @@ class AdminController extends BaseController
             return;
         }
         
+        $courseType = $this->getPost('course_type', 'MANDATORY');
+        $isElective = $courseType === 'ELECTIVE';
+        
         $data = [
             'name_bg' => trim($this->getPost('name_bg', '')),
-            'name_en' => trim($this->getPost('name_en', '')),
-            'outline_bg' => trim($this->getPost('description', '')),
+            'outline_bg' => trim($this->getPost('outline_bg', '')),
             'major_id' => (int) $this->getPost('major_id', 0) ?: null,
             'credits' => (int) $this->getPost('credits', 5),
-            'is_elective' => (bool) $this->getPost('is_elective', false),
+            'is_elective' => $isElective,
+            'year' => !$isElective && $this->getPost('year', null) ? (int) $this->getPost('year') : null,
         ];
         
         $prerequisites = $this->getPost('prerequisites', []);
@@ -710,6 +740,29 @@ class AdminController extends BaseController
         }
         
         $this->redirect('/admin/courses');
+    }
+    
+    /**
+     * Course instances list
+     */
+    public function courseInstances(int $id): void
+    {
+        $this->requireRole('ADMIN');
+        
+        $course = Course::find($id);
+        if (!$course) {
+            $this->session->setFlash('error', 'Курсът не е намерен');
+            $this->redirect('/admin/courses');
+            return;
+        }
+        
+        $instances = CourseInstance::where('course_id', $id);
+        
+        $this->render('admin/courses/instances', [
+            'course' => $course,
+            'instances' => $instances,
+            'title' => 'Инстанции - ' . $course->name_bg
+        ]);
     }
     
     // ==================== SCHEDULE GENERATION ====================
@@ -868,13 +921,17 @@ class AdminController extends BaseController
         $scheduleData = [];
         $type = $variant->type;
         
+        // When a variant is selected, its items have variant_id = NULL
+        // Non-selected variants have their actual variant_id
+        $isSelected = (bool) $variant->is_selected;
+        
         if ($type === 'WEEKLY') {
             // Get weekly slots for this variant with major info
-            $scheduleData = $this->db->fetchAll(
-                "SELECT ws.*, 
+            $sql = "SELECT ws.*, 
                         c.name_bg as course_name, c.code as course_code,
                         c.is_elective as is_elective,
                         c.major_id as course_major_id,
+                        c.year as course_year,
                         m.name_bg as major_name,
                         m.abbreviation as major_abbr,
                         r.number as room_number,
@@ -890,38 +947,36 @@ class AdminController extends BaseController
                  LEFT JOIN student_group g ON ws.group_id = g.id
                  LEFT JOIN major_stream ms ON g.stream_id = ms.id
                  LEFT JOIN user u ON ws.assistant_id = u.id
-                 WHERE ws.variant_id = :variant_id
-                 ORDER BY ws.day_of_week, ws.start_time",
-                ['variant_id' => $id]
-            );
+                 WHERE " . ($isSelected ? "ws.variant_id IS NULL" : "ws.variant_id = :variant_id") . "
+                 ORDER BY ws.day_of_week, ws.start_time";
+            
+            $scheduleData = $this->db->fetchAll($sql, $isSelected ? [] : ['variant_id' => $id]);
         } elseif ($type === 'TEST') {
             // Get test schedules for this variant
-            $scheduleData = $this->db->fetchAll(
-                "SELECT ts.*, 
+            $sql = "SELECT ts.*, 
                         c.name_bg as course_name, c.code as course_code,
                         r.number as room_number
                  FROM test_schedule ts
                  JOIN course_instance ci ON ts.course_instance_id = ci.id
                  JOIN course c ON ci.course_id = c.id
                  JOIN room r ON ts.room_id = r.id
-                 WHERE ts.variant_id = :variant_id
-                 ORDER BY ts.date, ts.start_time",
-                ['variant_id' => $id]
-            );
+                 WHERE " . ($isSelected ? "ts.variant_id IS NULL" : "ts.variant_id = :variant_id") . "
+                 ORDER BY ts.date, ts.start_time";
+            
+            $scheduleData = $this->db->fetchAll($sql, $isSelected ? [] : ['variant_id' => $id]);
         } elseif ($type === 'EXAM') {
             // Get exam schedules for this variant
-            $scheduleData = $this->db->fetchAll(
-                "SELECT es.*, 
+            $sql = "SELECT es.*, 
                         c.name_bg as course_name, c.code as course_code,
                         r.number as room_number
                  FROM exam_schedule es
                  JOIN course_instance ci ON es.course_instance_id = ci.id
                  JOIN course c ON ci.course_id = c.id
                  JOIN room r ON es.room_id = r.id
-                 WHERE es.variant_id = :variant_id
-                 ORDER BY es.date, es.start_time",
-                ['variant_id' => $id]
-            );
+                 WHERE " . ($isSelected ? "es.variant_id IS NULL" : "es.variant_id = :variant_id") . "
+                 ORDER BY es.date, es.start_time";
+            
+            $scheduleData = $this->db->fetchAll($sql, $isSelected ? [] : ['variant_id' => $id]);
         }
         
         // Get all majors for filter

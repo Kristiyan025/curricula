@@ -29,7 +29,7 @@
             </div>
             <div class="col-md-6">
                 <p><strong>Кредити:</strong> <?= $course->credits ?></p>
-                <p><strong>Тип:</strong> <?= $course->course_type === 'MANDATORY' ? 'Задължителна' : 'Избираема' ?></p>
+                <p><strong>Тип:</strong> <?= $course->is_elective ? 'Избираема' : 'Задължителна' ?></p>
             </div>
         </div>
     </div>

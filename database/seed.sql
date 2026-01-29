@@ -172,7 +172,8 @@ INSERT INTO `student` (`user_id`, `major_id`, `year`, `stream_id`, `group_id`) V
 -- =====================================================
 
 -- Mandatory courses for Informatics (Информатика)
-INSERT INTO `course` (`id`, `code`, `name_bg`, `outline_bg`, `credits`, `is_elective`, `major_id`) VALUES
+-- year = курс (1-5 за задължителни, NULL за избираеми)
+INSERT INTO `course` (`id`, `code`, `name_bg`, `outline_bg`, `credits`, `year`, `is_elective`, `major_id`) VALUES
 (1, 'INF101', 'Увод в програмирането', 
 '1. Основни понятия в програмирането
 2. Променливи и типове данни
@@ -182,7 +183,7 @@ INSERT INTO `course` (`id`, `code`, `name_bg`, `outline_bg`, `credits`, `is_elec
 6. Функции
 7. Рекурсия
 8. Основни алгоритми за търсене и сортиране', 
-6, 0, 1),
+6, 1, 0, 1),
 
 (2, 'INF102', 'Обектно-ориентирано програмиране',
 '1. Въведение в ООП
@@ -193,7 +194,7 @@ INSERT INTO `course` (`id`, `code`, `name_bg`, `outline_bg`, `credits`, `is_elec
 6. Изключения
 7. Колекции
 8. Шаблони за проектиране',
-6, 0, 1),
+6, 1, 0, 1),
 
 (3, 'INF201', 'Структури от данни и алгоритми',
 '1. Анализ на алгоритми - O-нотация
@@ -204,7 +205,7 @@ INSERT INTO `course` (`id`, `code`, `name_bg`, `outline_bg`, `credits`, `is_elec
 6. Сортиране - бързо, сливане, heap
 7. Динамично програмиране
 8. Алчни алгоритми',
-6, 0, 1),
+6, 2, 0, 1),
 
 (4, 'INF202', 'Бази от данни',
 '1. Релационен модел
@@ -214,10 +215,10 @@ INSERT INTO `course` (`id`, `code`, `name_bg`, `outline_bg`, `credits`, `is_elec
 5. Транзакции
 6. Проектиране на БД
 7. NoSQL бази данни',
-5, 0, 1);
+5, 2, 0, 1);
 
 -- Mandatory courses for Computer Science (КН)
-INSERT INTO `course` (`id`, `code`, `name_bg`, `outline_bg`, `credits`, `is_elective`, `major_id`) VALUES
+INSERT INTO `course` (`id`, `code`, `name_bg`, `outline_bg`, `credits`, `year`, `is_elective`, `major_id`) VALUES
 (5, 'CS101', 'Дискретна математика',
 '1. Множества и релации
 2. Комбинаторика
@@ -225,7 +226,7 @@ INSERT INTO `course` (`id`, `code`, `name_bg`, `outline_bg`, `credits`, `is_elec
 4. Булева алгебра
 5. Математическа логика
 6. Теория на числата',
-6, 0, 2),
+6, 1, 0, 2),
 
 (6, 'CS201', 'Операционни системи',
 '1. Въведение в ОС
@@ -235,10 +236,10 @@ INSERT INTO `course` (`id`, `code`, `name_bg`, `outline_bg`, `credits`, `is_elec
 5. Управление на паметта
 6. Файлови системи
 7. Входно-изходни операции',
-5, 0, 2);
+5, 2, 0, 2);
 
--- Elective courses (Избираеми)
-INSERT INTO `course` (`id`, `code`, `name_bg`, `outline_bg`, `credits`, `is_elective`, `major_id`) VALUES
+-- Elective courses (Избираеми) - year = NULL
+INSERT INTO `course` (`id`, `code`, `name_bg`, `outline_bg`, `credits`, `year`, `is_elective`, `major_id`) VALUES
 (7, 'ELC001', 'Уеб технологии',
 '1. HTML5 и CSS3
 2. JavaScript
@@ -247,7 +248,7 @@ INSERT INTO `course` (`id`, `code`, `name_bg`, `outline_bg`, `credits`, `is_elec
 5. Frameworks - Laravel, React
 6. Сигурност в уеб
 7. Performance оптимизация',
-4, 1, NULL),
+4, NULL, 1, NULL),
 
 (8, 'ELC002', 'Машинно обучение',
 '1. Въведение в ML
@@ -257,7 +258,7 @@ INSERT INTO `course` (`id`, `code`, `name_bg`, `outline_bg`, `credits`, `is_elec
 5. Невронни мрежи
 6. Deep Learning
 7. Практически проекти',
-4, 1, NULL),
+4, NULL, 1, NULL),
 
 (9, 'ELC003', 'Мобилни приложения',
 '1. Android разработка
@@ -267,7 +268,7 @@ INSERT INTO `course` (`id`, `code`, `name_bg`, `outline_bg`, `credits`, `is_elec
 5. Бази данни в мобилни приложения
 6. Push нотификации
 7. Публикуване в App Store/Play Store',
-4, 1, NULL);
+4, NULL, 1, NULL);
 
 -- Course prerequisites
 INSERT INTO `course_prerequisite` (`course_id`, `prereq_id`, `is_recommended`) VALUES

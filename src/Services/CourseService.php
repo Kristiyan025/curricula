@@ -89,11 +89,19 @@ class CourseService
             
             // Validate major_id for mandatory courses
             $majorId = null;
+            $year = null;
             if (empty($data['is_elective']) || !$data['is_elective']) {
                 if (empty($data['major_id'])) {
                     return ['success' => false, 'message' => 'Задължителните курсове изискват специалност'];
                 }
                 $majorId = $data['major_id'];
+                // Year is optional but validated to be 1-5 if provided
+                if (!empty($data['year'])) {
+                    $year = (int)$data['year'];
+                    if ($year < 1 || $year > 5) {
+                        return ['success' => false, 'message' => 'Курсът (година) трябва да е между 1 и 5'];
+                    }
+                }
             }
             
             $courseId = $this->db->insert('course', [
@@ -102,7 +110,8 @@ class CourseService
                 'outline_bg' => $data['outline_bg'],
                 'credits' => $data['credits'] ?? 5,
                 'is_elective' => $data['is_elective'] ?? 0,
-                'major_id' => $majorId
+                'major_id' => $majorId,
+                'year' => $year
             ]);
             
             // Add prerequisites
@@ -160,10 +169,21 @@ class CourseService
                 $updateData['is_elective'] = $data['is_elective'];
                 if ($data['is_elective']) {
                     $updateData['major_id'] = null;
+                    $updateData['year'] = null;
                 }
             }
             if (isset($data['major_id']) && empty($data['is_elective'])) {
                 $updateData['major_id'] = $data['major_id'];
+            }
+            if (isset($data['year']) && empty($data['is_elective'])) {
+                if (!empty($data['year'])) {
+                    $year = (int)$data['year'];
+                    if ($year >= 1 && $year <= 5) {
+                        $updateData['year'] = $year;
+                    }
+                } else {
+                    $updateData['year'] = null;
+                }
             }
             
             if (!empty($updateData)) {
@@ -172,6 +192,13 @@ class CourseService
             
             // Update prerequisites if provided
             if (isset($data['prerequisites'])) {
+                // Check for cycles before updating
+                $newPrereqIds = array_map(fn($p) => $p['id'], $data['prerequisites']);
+                if ($this->wouldCreateCycle($id, $newPrereqIds)) {
+                    $this->db->rollback();
+                    return ['success' => false, 'message' => 'Промените ще създадат цикъл в зависимостите!'];
+                }
+                
                 $this->db->delete('course_prerequisite', 'course_id = :course_id', ['course_id' => $id]);
                 
                 foreach ($data['prerequisites'] as $prereq) {
@@ -193,6 +220,66 @@ class CourseService
             $this->db->rollback();
             return ['success' => false, 'message' => 'Грешка при обновяване: ' . $e->getMessage()];
         }
+    }
+    
+    /**
+     * Check if setting prerequisites would create a cycle
+     * @param int $courseId The course being updated
+     * @param array $newPrereqIds The new prerequisite IDs
+     * @return bool True if it would create a cycle
+     */
+    private function wouldCreateCycle(int $courseId, array $newPrereqIds): bool
+    {
+        // Build the current prerequisite graph (excluding the course being updated)
+        $graph = [];
+        $allPrereqs = $this->db->fetchAll(
+            "SELECT course_id, prereq_id FROM course_prerequisite WHERE course_id != :course_id",
+            ['course_id' => $courseId]
+        );
+        
+        foreach ($allPrereqs as $row) {
+            if (!isset($graph[$row['course_id']])) {
+                $graph[$row['course_id']] = [];
+            }
+            $graph[$row['course_id']][] = $row['prereq_id'];
+        }
+        
+        // Add the new prerequisites for the course being updated
+        $graph[$courseId] = $newPrereqIds;
+        
+        // DFS to detect cycles - check if we can reach courseId from any of its new prereqs
+        foreach ($newPrereqIds as $prereqId) {
+            if ($this->canReach($prereqId, $courseId, $graph, [])) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Check if we can reach targetId from startId using DFS
+     */
+    private function canReach(int $startId, int $targetId, array $graph, array $visited): bool
+    {
+        if ($startId === $targetId) {
+            return true;
+        }
+        
+        if (in_array($startId, $visited)) {
+            return false;
+        }
+        
+        $visited[] = $startId;
+        $prereqs = $graph[$startId] ?? [];
+        
+        foreach ($prereqs as $prereqId) {
+            if ($this->canReach($prereqId, $targetId, $graph, $visited)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     /**

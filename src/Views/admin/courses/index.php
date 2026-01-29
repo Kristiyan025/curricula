@@ -33,7 +33,8 @@
                     <th>Име (БГ)</th>
                     <th>Кредити</th>
                     <th>Тип</th>
-                    <th>Часове (Л/У)</th>
+                    <th>Курс</th>
+                    <th>Специалност</th>
                     <th>Действия</th>
                 </tr>
             </thead>
@@ -44,12 +45,27 @@
                         <td><?= htmlspecialchars($course->name_bg) ?></td>
                         <td><?= $course->credits ?></td>
                         <td>
-                            <span class="badge bg-<?= $course->course_type === 'MANDATORY' ? 'primary' : 'success' ?>">
-                                <?= $course->course_type === 'MANDATORY' ? 'Задължителна' : 'Избираема' ?>
+                            <span class="badge bg-<?= $course->is_elective ? 'success' : 'primary' ?>">
+                                <?= $course->is_elective ? 'Избираема' : 'Задължителна' ?>
                             </span>
                         </td>
                         <td>
-                            <?= $course->lecture_hours ?>л / <?= $course->exercise_hours ?>у
+                            <?php if (!$course->is_elective && $course->year): ?>
+                                <span class="badge bg-info"><?= $course->year ?> курс</span>
+                            <?php else: ?>
+                                <span class="text-muted">-</span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <?php if ($course->major_id): ?>
+                                <?php 
+                                    $major = array_filter($majors, fn($m) => $m->id == $course->major_id);
+                                    $major = reset($major);
+                                ?>
+                                <?= $major ? htmlspecialchars($major->abbreviation) : '-' ?>
+                            <?php else: ?>
+                                <span class="text-muted">Всички</span>
+                            <?php endif; ?>
                         </td>
                         <td>
                             <a href="/admin/courses/<?= $course->id ?>/edit" class="btn btn-sm btn-warning">

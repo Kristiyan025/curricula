@@ -18,14 +18,6 @@
         <div class="col-md-4">
             <input type="text" class="form-control" id="searchRoom" placeholder="Търсене по номер...">
         </div>
-        <div class="col-md-4">
-            <select class="form-select" id="filterType">
-                <option value="">Всички типове</option>
-                <option value="LECTURE_HALL">Лекционна зала</option>
-                <option value="COMPUTER_LAB">Компютърна зала</option>
-                <option value="SEMINAR_ROOM">Семинарна зала</option>
-            </select>
-        </div>
     </div>
     
     <div class="table-responsive">
@@ -33,46 +25,19 @@
             <thead class="table-dark">
                 <tr>
                     <th>Номер</th>
-                    <th>Тип</th>
-                    <th>Сграда</th>
                     <th>Етаж</th>
-                    <th>Капацитет</th>
-                    <th>Оборудване</th>
+                    <th>Бели дъски</th>
+                    <th>Черни дъски</th>
                     <th>Действия</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($rooms as $room): ?>
-                    <tr data-type="<?= $room->room_type ?>">
-                        <td><code><?= htmlspecialchars($room->room_number) ?></code></td>
-                        <td>
-                            <?php
-                            $types = [
-                                'LECTURE_HALL' => ['Лекционна', 'primary'],
-                                'COMPUTER_LAB' => ['Компютърна', 'success'],
-                                'SEMINAR_ROOM' => ['Семинарна', 'info']
-                            ];
-                            $type = $types[$room->room_type] ?? ['Друга', 'secondary'];
-                            ?>
-                            <span class="badge bg-<?= $type[1] ?>"><?= $type[0] ?></span>
-                        </td>
-                        <td><?= htmlspecialchars($room->building ?? '-') ?></td>
+                    <tr>
+                        <td><code><?= htmlspecialchars($room->number ?? '') ?></code></td>
                         <td><?= $room->floor ?? '-' ?></td>
-                        <td><?= $room->capacity ?> места</td>
-                        <td>
-                            <?php if ($room->has_projector): ?>
-                                <i class="bi bi-tv text-success" title="Проектор"></i>
-                            <?php endif; ?>
-                            <?php if ($room->has_computers): ?>
-                                <i class="bi bi-pc-display text-info" title="Компютри"></i>
-                            <?php endif; ?>
-                            <?php if ($room->has_whiteboard): ?>
-                                <i class="bi bi-easel text-secondary" title="Бяла дъска"></i>
-                            <?php endif; ?>
-                            <?php if ($room->is_accessible): ?>
-                                <i class="bi bi-universal-access text-primary" title="Достъпна"></i>
-                            <?php endif; ?>
-                        </td>
+                        <td><?= $room->white_boards ?? 0 ?></td>
+                        <td><?= $room->black_boards ?? 0 ?></td>
                         <td>
                             <a href="/admin/rooms/<?= $room->id ?>/edit" class="btn btn-sm btn-warning">
                                 <i class="bi bi-pencil"></i>
@@ -94,20 +59,17 @@
 
 <script>
 document.getElementById('searchRoom')?.addEventListener('input', filterRooms);
-document.getElementById('filterType')?.addEventListener('change', filterRooms);
 
 function filterRooms() {
     const search = document.getElementById('searchRoom').value.toLowerCase();
-    const type = document.getElementById('filterType').value;
     
     document.querySelectorAll('#roomsTable tbody tr').forEach(row => {
         const roomNumber = row.querySelector('code').textContent.toLowerCase();
-        const roomType = row.dataset.type;
         
-        const matchesSearch = roomNumber.includes(search);
-        const matchesType = !type || roomType === type;
+        // Filter by prefix (startsWith)
+        const matchesSearch = roomNumber.startsWith(search);
         
-        row.style.display = matchesSearch && matchesType ? '' : 'none';
+        row.style.display = matchesSearch ? '' : 'none';
     });
 }
 </script>

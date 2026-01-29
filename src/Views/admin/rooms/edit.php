@@ -21,90 +21,30 @@
             
             <div class="row">
                 <div class="col-md-4 mb-3">
-                    <label for="room_number" class="form-label">Номер <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="room_number" name="room_number"
-                           value="<?= htmlspecialchars($room->room_number) ?>" required maxlength="20">
+                    <label for="number" class="form-label">Номер <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="number" name="number"
+                           value="<?= htmlspecialchars($room->number ?? '') ?>" required maxlength="3">
+                    <small class="text-muted">Трицифрен код (първа цифра = етаж)</small>
                 </div>
                 
                 <div class="col-md-4 mb-3">
-                    <label for="room_type" class="form-label">Тип <span class="text-danger">*</span></label>
-                    <select class="form-select" id="room_type" name="room_type" required>
-                        <option value="LECTURE_HALL" <?= $room->room_type === 'LECTURE_HALL' ? 'selected' : '' ?>>
-                            Лекционна зала
-                        </option>
-                        <option value="COMPUTER_LAB" <?= $room->room_type === 'COMPUTER_LAB' ? 'selected' : '' ?>>
-                            Компютърна зала
-                        </option>
-                        <option value="SEMINAR_ROOM" <?= $room->room_type === 'SEMINAR_ROOM' ? 'selected' : '' ?>>
-                            Семинарна зала
-                        </option>
-                    </select>
-                </div>
-                
-                <div class="col-md-4 mb-3">
-                    <label for="capacity" class="form-label">Капацитет <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control" id="capacity" name="capacity"
-                           value="<?= $room->capacity ?>" required min="1" max="500">
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="building" class="form-label">Сграда</label>
-                    <input type="text" class="form-control" id="building" name="building"
-                           value="<?= htmlspecialchars($room->building ?? '') ?>">
-                </div>
-                
-                <div class="col-md-6 mb-3">
-                    <label for="floor" class="form-label">Етаж</label>
+                    <label for="floor" class="form-label">Етаж <span class="text-danger">*</span></label>
                     <input type="number" class="form-control" id="floor" name="floor"
-                           value="<?= $room->floor ?? '' ?>">
+                           value="<?= $room->floor ?? '' ?>" required min="1" max="6">
                 </div>
             </div>
             
-            <hr>
-            
-            <h5>Оборудване</h5>
-            
             <div class="row">
-                <div class="col-md-3 mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="has_projector" name="has_projector" value="1"
-                               <?= $room->has_projector ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="has_projector">
-                            <i class="bi bi-tv"></i> Проектор
-                        </label>
-                    </div>
+                <div class="col-md-4 mb-3">
+                    <label for="white_boards" class="form-label">Бели дъски</label>
+                    <input type="number" class="form-control" id="white_boards" name="white_boards"
+                           value="<?= $room->white_boards ?? 0 ?>" min="0">
                 </div>
                 
-                <div class="col-md-3 mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="has_computers" name="has_computers" value="1"
-                               <?= $room->has_computers ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="has_computers">
-                            <i class="bi bi-pc-display"></i> Компютри
-                        </label>
-                    </div>
-                </div>
-                
-                <div class="col-md-3 mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="has_whiteboard" name="has_whiteboard" value="1"
-                               <?= $room->has_whiteboard ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="has_whiteboard">
-                            <i class="bi bi-easel"></i> Бяла дъска
-                        </label>
-                    </div>
-                </div>
-                
-                <div class="col-md-3 mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="is_accessible" name="is_accessible" value="1"
-                               <?= $room->is_accessible ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="is_accessible">
-                            <i class="bi bi-universal-access"></i> Достъпна
-                        </label>
-                    </div>
+                <div class="col-md-4 mb-3">
+                    <label for="black_boards" class="form-label">Черни дъски</label>
+                    <input type="number" class="form-control" id="black_boards" name="black_boards"
+                           value="<?= $room->black_boards ?? 0 ?>" min="0">
                 </div>
             </div>
             

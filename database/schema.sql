@@ -139,6 +139,7 @@ CREATE TABLE `course` (
     `name_bg` VARCHAR(200) NOT NULL COMMENT 'Име на български',
     `outline_bg` TEXT NOT NULL COMMENT 'Конспект на български',
     `credits` INT NOT NULL COMMENT 'Кредити',
+    `year` INT DEFAULT NULL COMMENT 'Курс (година 1-5), NULL за избираеми',
     `is_elective` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Избираем курс',
     `major_id` INT UNSIGNED DEFAULT NULL COMMENT 'За задължителни курсове - специалност',
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -146,8 +147,10 @@ CREATE TABLE `course` (
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_course_code` (`code`),
     KEY `idx_course_major` (`major_id`),
+    KEY `idx_course_year` (`year`),
     CONSTRAINT `fk_course_major` FOREIGN KEY (`major_id`) REFERENCES `major` (`id`) ON DELETE SET NULL,
-    CONSTRAINT `chk_course_credits` CHECK (`credits` > 0)
+    CONSTRAINT `chk_course_credits` CHECK (`credits` > 0),
+    CONSTRAINT `chk_course_year` CHECK (`year` IS NULL OR `year` BETWEEN 1 AND 5)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Course Prerequisite (Предварителни изисквания)

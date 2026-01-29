@@ -410,5 +410,27 @@ abstract class BaseScheduleGenerator
                 $variant->delete();
             }
         }
+        
+        // Also clean up orphaned items (variant_id = NULL) from previously selected variants
+        $this->cleanupOrphanedItems($type);
+    }
+    
+    /**
+     * Clean up orphaned schedule items (items with variant_id = NULL)
+     * These are left over from previously selected variants
+     */
+    protected function cleanupOrphanedItems(string $type): void
+    {
+        switch ($type) {
+            case ScheduleVariant::TYPE_WEEKLY:
+                $this->db->execute("DELETE FROM weekly_slot WHERE variant_id IS NULL");
+                break;
+            case ScheduleVariant::TYPE_TEST:
+                $this->db->execute("DELETE FROM test_schedule WHERE variant_id IS NULL");
+                break;
+            case ScheduleVariant::TYPE_EXAM:
+                $this->db->execute("DELETE FROM exam_schedule WHERE variant_id IS NULL");
+                break;
+        }
     }
 }

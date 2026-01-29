@@ -93,7 +93,7 @@ class WeeklyScheduleGenerator extends BaseScheduleGenerator
     {
         // Load course instances with course info
         $instances = $this->db->fetchAll(
-            "SELECT ci.*, c.name_bg, c.code, c.is_elective, c.major_id
+            "SELECT ci.*, c.name_bg, c.code, c.is_elective, c.major_id, c.year as course_year
              FROM course_instance ci
              JOIN course c ON ci.course_id = c.id
              WHERE ci.academic_year = :year AND ci.semester = :semester",
@@ -156,6 +156,7 @@ class WeeklyScheduleGenerator extends BaseScheduleGenerator
         // Mandatory courses - schedule for each stream/group
         foreach ($this->mandatoryInstances as $instance) {
             $majorId = $instance['major_id'];
+            $courseYear = $instance['course_year'];
             $streams = $this->streamsByMajor[$majorId] ?? [];
             
             foreach ($streams as $stream) {
@@ -165,6 +166,7 @@ class WeeklyScheduleGenerator extends BaseScheduleGenerator
                     'instance_id' => $instance['id'],
                     'stream_id' => $stream['id'],
                     'major_id' => $majorId,
+                    'course_year' => $courseYear,
                     'is_elective' => false,
                     'duration' => $instance['lecture_duration_hours'],
                     'lecturers' => $this->instanceLecturers[$instance['id']] ?? []
@@ -188,6 +190,7 @@ class WeeklyScheduleGenerator extends BaseScheduleGenerator
                             'stream_id' => $stream['id'],
                             'group_id' => $group['id'],
                             'major_id' => $majorId,
+                            'course_year' => $courseYear,
                             'is_elective' => false,
                             'duration' => $instance['exercise_duration_hours'],
                             'assistant_id' => $assistantId
@@ -205,6 +208,7 @@ class WeeklyScheduleGenerator extends BaseScheduleGenerator
                 'instance_id' => $instance['id'],
                 'stream_id' => null,
                 'major_id' => null,
+                'course_year' => null,
                 'is_elective' => true,
                 'duration' => $instance['lecture_duration_hours'],
                 'lecturers' => $this->instanceLecturers[$instance['id']] ?? []
@@ -223,6 +227,7 @@ class WeeklyScheduleGenerator extends BaseScheduleGenerator
                     'stream_id' => null,
                     'group_id' => null,
                     'major_id' => null,
+                    'course_year' => null,
                     'is_elective' => true,
                     'duration' => $instance['exercise_duration_hours'],
                     'assistant_id' => $assistantId
@@ -235,19 +240,13 @@ class WeeklyScheduleGenerator extends BaseScheduleGenerator
     
     /**
      * Create a random chromosome
+     * Note: Items are NOT shuffled to ensure all chromosomes have the same item at each index.
+     * This is required for crossover to work correctly (swapping genes at same index).
+     * Randomness comes from time slot and room selection.
      */
     protected function createRandomChromosome(array $items, array $availableSlots): array
     {
         $chromosome = [];
-        
-        // Shuffle items but keep mandatory first
-        $mandatory = array_filter($items, fn($i) => !$i['is_elective']);
-        $elective = array_filter($items, fn($i) => $i['is_elective']);
-        
-        shuffle($mandatory);
-        shuffle($elective);
-        
-        $items = array_merge(array_values($mandatory), array_values($elective));
         
         foreach ($items as $index => $item) {
             $slots = $item['is_elective'] ? $availableSlots['elective'] : $availableSlots['mandatory'];
@@ -284,6 +283,7 @@ class WeeklyScheduleGenerator extends BaseScheduleGenerator
         $lecturerUsage = []; // [day][user_id][] = time range
         $groupUsage = []; // [day][group_id][] = time range
         $streamUsage = []; // [day][stream_id][] = time range (for lectures)
+        $yearMajorUsage = []; // [day][major_id][course_year][] = time range (for year conflicts)
         
         foreach ($chromosome as $gene) {
             $item = $gene['item'];
@@ -337,6 +337,21 @@ class WeeklyScheduleGenerator extends BaseScheduleGenerator
                 // Check preferences
                 $room = $this->rooms[array_search($roomId, array_column($this->rooms, 'id'))] ?? [];
                 $penalty += $this->checkPreferences($assistantId, false, (int)substr($start, 0, 2), $room);
+            }
+            
+            // Check year-major conflicts (mandatory courses in same major+year should not overlap)
+            if (!$item['is_elective'] && !empty($item['major_id']) && !empty($item['course_year'])) {
+                $majorId = $item['major_id'];
+                $courseYear = $item['course_year'];
+                
+                $yearMajorUsage[$day][$majorId][$courseYear] = $yearMajorUsage[$day][$majorId][$courseYear] ?? [];
+                foreach ($yearMajorUsage[$day][$majorId][$courseYear] as $existing) {
+                    if ($this->timesOverlap($start, $end, $existing['start'], $existing['end'])) {
+                        // Same major, same year, overlapping times = conflict
+                        $penalty += $this->hardConstraintPenalty['group_conflict'];
+                    }
+                }
+                $yearMajorUsage[$day][$majorId][$courseYear][] = $timeRange;
             }
             
             // Check group conflicts (for mandatory courses)
